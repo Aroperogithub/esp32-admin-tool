@@ -23,6 +23,7 @@
 #include "settingsRead.hpp"
 #include "settingsSave.hpp"
 #include "esp32_wifi.hpp"
+#include "esp32_mqtt.hpp"
 
 // -------------------------------------------------------------------
 // Librerías
@@ -39,13 +40,20 @@ void setup() {
     //ATENCIÓN!!!! QUITAR ESTO POR DIOS...
     while (true);
   }
+  //Lee los estados de los Relays
+  settingsReadRelays ();
+  //Paso estados a los pines Relays
+  setOnOffSingle (RELAY1, Relay01_status);
+  setOnOffSingle (RELAY2, Relay02_status);
+  //Lee la configuración WiFi.
   settingsReadWiFi ();              //Lee la Configuración WiFi.   
   WiFi.disconnect (true);
   delay (1000);
   wifi_setup ();                    //Setup del WiFi.
+  settingsReadMQTT ();              //Lee la Configuración WiFi.   
 }
 
-void loop() {
+void loop () {
   yield ();
 
   if (wifi_mode == WIFI_STA) {
@@ -53,5 +61,19 @@ void loop() {
   }
   if (wifi_mode == WIFI_AP) {
     wifiAPLoop ();
+  }
+  // -------------------------------------------------------------------
+  // MQTT
+  // -------------------------------------------------------------------
+  if ((WiFi.status() == WL_CONNECTED) && (wifi_mode == WIFI_STA)) {
+      if (mqtt_server != 0) { 
+          mqttLoop();
+          if (mqttclient.connected ()) {
+              if (millis() - lastMsg > mqtt_time) {
+                  lastMsg = millis();
+                  mqtt_publish();
+              }
+          }      
+      }
   }
 }
