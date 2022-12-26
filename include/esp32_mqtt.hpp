@@ -1,14 +1,13 @@
 /* -------------------------------------------------------------------
-* AdminESP - Angel Ropero 2022
-* Sitio Web:
-* e-mail: angel.ropero.pena@gmail.com
-* Plataforma ESP32
-* Proyecto Admin Panel Tool para el ESP32
-* --------------------------------------------------------------------
+ * AdminESP - ElectronicIOT 2021
+ * Sitio WEB: https://electroniciot.com
+ * Correo: admim@electroniciot.com
+ * Plataforma ESP32
+ * Proyecto Admin Panel Tool para el ESP32
+ * -------------------------------------------------------------------
 */
 
 #include <PubSubClient.h>
-
 
 WiFiClient espClient;
 PubSubClient mqttclient(espClient);
@@ -25,7 +24,13 @@ String Json();
 // -------------------------------------------------------------------
 // MQTT Connect
 // -------------------------------------------------------------------
-boolean mqtt_connect (void) {  
+boolean mqtt_connect(){  
+
+  log ("mqtt_server: " + String (mqtt_server));
+  log ("mqtt_port: " + String (mqtt_port));
+  log ("mqtt_id: " + String (mqtt_id));
+  log ("mqtt_user: " + String (mqtt_user));
+  log ("mqtt_passw: " + String (mqtt_passw));
   
   mqttclient.setServer(mqtt_server, mqtt_port);
   mqttclient.setCallback(callback);
@@ -34,7 +39,7 @@ boolean mqtt_connect (void) {
   // Conexion al Servidor MQTT , ClienteID, Usuario, Password.
   // Ver documentación => https://pubsubclient.knolleary.net/api.html  
 
-  if (mqttclient.connect(mqtt_id, mqtt_user, mqtt_passw)) {             // Attempt to connect
+  if (mqttclient.connect(mqtt_id, mqtt_user, mqtt_passw)) {  // Attempt to connect
     log("Info: Conectado al Broker MQTT");
     // Nos suscribimos a comandos Topico: usuario/dispositivo/comando
     String topico_subscribe = String(mqtt_user)+"/"+mqtt_id+"/command";
@@ -43,11 +48,14 @@ boolean mqtt_connect (void) {
 
     topico_subscribe.toCharArray(topico, 25);
     mqttclient.publish(topico, "ok"); //Publicar respuesta ok por MQTT
+
   } else {
     log("Error: failed, rc= " + mqttclient.state());
     return(0);
   }
+
   return (1);
+
 }
 // -------------------------------------------------------------------
 // Manejo de los Mensajes Entrantes
@@ -57,18 +65,17 @@ void callback(char *topic, byte *payload, unsigned int length){
   String mensaje = "";
   String str_topic(topic);
 
-  for (uint16_t i = 0; i < length; i++) {
+  for(uint16_t i = 0; i < length; i++){
     mensaje += (char)payload[i];
-    mqttRX ();
+    mqttRX();
   }
 
-  mensaje.trim ();              // Limpiamos la variable "mensaje" de espacios.
+  mensaje.trim();
 
-  DynamicJsonDocument jsonDoc (300);
+  DynamicJsonDocument jsonDoc(300);
 
-  deserializeJson (jsonDoc, mensaje);
+  deserializeJson(jsonDoc, mensaje);
 
-  //TODO: Solo para pruebas tras haber instalado el TODO HIGHLIGHTs.
   if(jsonDoc["RELAY1"] == "on"){
     setOnSingle(RELAY1);
     Relay01_status = HIGH;
@@ -87,8 +94,8 @@ void callback(char *topic, byte *payload, unsigned int length){
     settingsSaveRelays();
   }
 
-  log ("Info: Topico  -->" + str_topic);
-  log ("Info: Mensaje -->" + mensaje); 
+  log("Info: Topico -->" + str_topic);
+  log("Info: Mensaje -->" + mensaje); 
 
   serializeJsonPretty(jsonDoc, Serial);
 
@@ -96,7 +103,7 @@ void callback(char *topic, byte *payload, unsigned int length){
 // -------------------------------------------------------------------
 // Manejo de los Mensajes Salientes
 // ------------------------------------------------------------------- 
-void mqtt_publish (void) {
+void mqtt_publish() {
   
   String topic = String(mqtt_user)+"/"+mqtt_id+"/values";
   mqtt_data = Json();
@@ -109,29 +116,28 @@ void mqtt_publish (void) {
 // -------------------------------------------------------------------
 // JSON con informacion de envio por MQTT
 // ------------------------------------------------------------------- 
-String Json (void) {
+String Json(){
 
-   String response;
-   DynamicJsonDocument jsonDoc(3000);
+  String response;
+  DynamicJsonDocument jsonDoc(3000);
 
-   jsonDoc["wifi_dbm"]      = WiFi.status() == WL_CONNECTED ? String(WiFi.RSSI()) : F("0");
-   jsonDoc["wifi_percent"]  = WiFi.status() == WL_CONNECTED ? String(getRSSIasQuality(WiFi.RSSI())) : F("0"); 
-   jsonDoc["temp_cpu"]      = String(TempCPUValue()); 
-   jsonDoc["ram_available"] = String(ESP.getFreeHeap() * 100 / ESP.getHeapSize()); 
-   jsonDoc["flash_used"]    = String(round(SPIFFS.usedBytes() * 100 / SPIFFS.totalBytes()), 0);
-   jsonDoc["relay1_status"] = String(Relay01_status ? "true" : "false");
-   jsonDoc["relay2_status"] = String(Relay02_status ? "true" : "false");
-
-   serializeJson(jsonDoc, response);   
-   return response;
+  jsonDoc["wifi_dbm"] = WiFi.status() == WL_CONNECTED ? String(WiFi.RSSI()) : F("0");
+  jsonDoc["wifi_percent"] = WiFi.status() == WL_CONNECTED ? String(getRSSIasQuality(WiFi.RSSI())) : F("0"); 
+  jsonDoc["temp_cpu"] = String(TempCPUValue()); 
+  jsonDoc["ram_available"] = String(ESP.getFreeHeap() * 100 / ESP.getHeapSize()); 
+  jsonDoc["flash_available"] = String(round(SPIFFS.usedBytes() * 100 / SPIFFS.totalBytes()), 0);
+  jsonDoc["relay1_status"] = String(Relay01_status ? "true" : "false");
+  jsonDoc["relay2_status"] = String(Relay02_status ? "true" : "false");
+  serializeJson(jsonDoc, response);   
+  log (response);
+  return response;
 
 }
 // -------------------------------------------------------------------
 // MQTT Loop Principal
 // -------------------------------------------------------------------
 void mqttLoop(){
-    if (mqtt_enable) {
-    
+  if(mqtt_enable){
       if (!mqttclient.connected()) {
         long now = millis();
         // try and reconnect continuously for first 60s then try again once every 120s
@@ -147,9 +153,9 @@ void mqttLoop(){
         // if MQTT connected
         mqttclient.loop();
         // Poner en OFF el Led del MQTT
-        setOffSingle(MQTTLED);
+         setOffSingle(MQTTLED);
       }
-    }
+  }
 }
 
 

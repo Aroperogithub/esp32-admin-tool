@@ -1,79 +1,106 @@
 /* -------------------------------------------------------------------
-* AdminESP - Angel Ropero 2022
-* Sitio Web:
-* e-mail: angel.ropero.pena@gmail.com
-* Plataforma ESP32
-* Proyecto Admin Panel Tool para el ESP32
-* --------------------------------------------------------------------
+ * AdminESP - ElectronicIOT 2021
+ * Sitio WEB: https://electroniciot.com
+ * Correo: admim@electroniciot.com
+ * Plataforma ESP32
+ * Proyecto Admin Panel Tool para el ESP32
+ * -------------------------------------------------------------------
 */
 
 // -------------------------------------------------------------------
-// Librerías
+// Librerias
 // -------------------------------------------------------------------
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <SPIFFS.h>
+#include <TimeLib.h>
 
 // -------------------------------------------------------------------
-// Archivos *.hpp - Fragmentar el código
+// Archivos *.hpp - Fragmentar el Código
 // -------------------------------------------------------------------
 #include "settings.hpp"
-#include "funtions.hpp"
+#include "functions.hpp"
 #include "settingsReset.hpp"
 #include "settingsRead.hpp"
 #include "settingsSave.hpp"
 #include "esp32_wifi.hpp"
 #include "esp32_mqtt.hpp"
+#include "esp32_api.hpp"
+#include "esp32_websocket.hpp"
+#include "esp32_server.hpp"
 
 // -------------------------------------------------------------------
-// Librerías
+// Setup
 // -------------------------------------------------------------------
 void setup() {
-  
-  Serial.begin (115200);            //Baudrate
-  setCpuFrequencyMhz (240);         //CPU Frequency
-  log ("\nInfo: Iniciando Setup");  //Inicio del Log por serial
-  settingPines ();                  //Configuración de los Pines
-  //Inicio del SPIFFS
-  if (!SPIFFS.begin(true)) {        //ATENCIÓN!!! Hay que poner el "true" dentro del begin, ya que si no da un error de que no se puede inicializar.
-    log ("Error: Falló la inicialización del SPIFFS");
-    //ATENCIÓN!!!! QUITAR ESTO POR DIOS...
-    while (true);
-  }
-  //Lee los estados de los Relays
-  settingsReadRelays ();
-  //Paso estados a los pines Relays
-  setOnOffSingle (RELAY1, Relay01_status);
-  setOnOffSingle (RELAY2, Relay02_status);
-  //Lee la configuración WiFi.
-  settingsReadWiFi ();              //Lee la Configuración WiFi.   
-  WiFi.disconnect (true);
-  delay (1000);
-  wifi_setup ();                    //Setup del WiFi.
-  settingsReadMQTT ();              //Lee la Configuración WiFi.   
+    // Baudrate
+    Serial.begin(115200);
+    // CPU Freq
+    setCpuFrequencyMhz(240);
+    // Inicio del Log por serial
+    log("\nInfo: Iniciando Setup");
+    // Configurar los Pines
+    settingPines();
+    // Inicio del SPIFFS                 
+    if (!SPIFFS.begin()){
+        log(F("Error: Falló la inicialización del SPIFFS"));
+        while (true);
+    }
+    // Lee los estados de los Relays
+    if(!settingsReadRelays()) settingsSaveRelays(); //salvar estados de los relays
+    // Paso estados a los pines de los Relays
+    setOnOffSingle(RELAY1,Relay01_status);
+    setOnOffSingle(RELAY2,Relay02_status);
+    // Lee la Configuración WiFi
+    if(!settingsReadWiFi()) settingsSaveWiFi();     // Salvar las configuraciones del WIFI
+    // Incrementar el contador de reinicios
+    bootCount++;
+    // Salvar las configuraciones del WIFI + incremento del bootCount
+    settingsSaveWiFi();
+    // Configuracion WIFI
+    WiFi.disconnect(true);
+    delay(1000);
+    // Setup del WiFI
+    wifi_setup(); 
+    // Lee la Configuración MQTT
+    if(!settingsReadMQTT()) settingsSaveMQTT();     // Salvar la configuracion del MQTT
+    // leer www_username/password
+    if(!settingsReadAdmin()) settingsSaveAdmin();   // Salvar el usuario y Contraseña
+    // Inicializar el Servidor
+    InitServer();
+    // Nos devuelve la lista de carpetas y archivos del SPIFFS ONLYDEBUG
+    //listDir(SPIFFS, "/", 0); 
+    log("Info: Setup completado");   
+
 }
 
-void loop () {
-  yield ();
 
-  if (wifi_mode == WIFI_STA) {
-    wifiLoop ();
-  }
-  if (wifi_mode == WIFI_AP) {
-    wifiAPLoop ();
-  }
-  // -------------------------------------------------------------------
-  // MQTT
-  // -------------------------------------------------------------------
-  if ((WiFi.status() == WL_CONNECTED) && (wifi_mode == WIFI_STA)) {
-      if (mqtt_server != 0) { 
-          mqttLoop();
-          if (mqttclient.connected ()) {
-              if (millis() - lastMsg > mqtt_time) {
-                  lastMsg = millis();
-                  mqtt_publish();
-              }
-          }      
-      }
-  }
+// -------------------------------------------------------------------
+// Loop Pincipal Nucleo 0
+// -------------------------------------------------------------------
+void loop() {
+
+    yield();
+    // -------------------------------------------------------------------
+    // WIFI
+    // -------------------------------------------------------------------
+    if (wifi_mode == WIFI_STA){
+        wifiLoop();
+    }else if (wifi_mode == WIFI_AP){
+        wifiAPLoop();
+    } 
+    // -------------------------------------------------------------------
+    // MQTT
+    // -------------------------------------------------------------------
+    if ((WiFi.status() == WL_CONNECTED) && (wifi_mode == WIFI_STA)){
+        if(mqtt_server != 0){
+            mqttLoop();
+            if (mqttclient.connected()){
+                if (millis() - lastMsg > mqtt_time){
+                    lastMsg = millis();
+                    mqtt_publish();
+                }
+            }      
+        }
+    }
 }

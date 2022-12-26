@@ -1,11 +1,10 @@
-/* -------------------------------------------------------------------
-* AdminESP - Angel Ropero 2022
-* Sitio Web:
-* e-mail: angel.ropero.pena@gmail.com
-* Plataforma ESP32
-* Proyecto Admin Panel Tool para el ESP32
-* --------------------------------------------------------------------
-*/
+/*
+ * -------------------------------------------------------------------
+ * AdminESP - ElectronicIOT 2021
+ * Sitio WEB: https://electroniciot.com
+ * Correo: info@electroniciot.com
+ * -------------------------------------------------------------------
+ */
 
 #include <Arduino.h>
 
@@ -69,7 +68,7 @@ void blinkRandomSingle(int minTime, int maxTime, int _pin){
 // On un Led/Relay/Actuador
 // -------------------------------------------------------------------
 void setOnSingle(int _pin){
-    digitalWrite(_pin, HIGH);
+    digitalWrite(_pin, HIGH);       
 }
 // -------------------------------------------------------------------
 // Off un Led/Relay/Actuador
@@ -77,7 +76,6 @@ void setOnSingle(int _pin){
 void setOffSingle(int _pin){
     digitalWrite(_pin, LOW);
 }
-
 // -------------------------------------------------------------------
 // On/Off un Led/Relay/Actuador segun Estados
 // -------------------------------------------------------------------
@@ -88,5 +86,3 @@ void setOnOffSingle(int _pin, bool status){
         digitalWrite(_pin, LOW);
     }          
 }
-
-

@@ -1,0 +1,32 @@
+[{
+        "id": "adminesp32",
+        "boot": 1,
+        "wifi_staticIP": false,
+        "wifi_ssid": "casa ciruelo",
+        "wifi_passw": "casaplum265",
+        "wifi_ip_static": "192.168.0.150",
+        "wifi_gateway": "192.168.0.1",
+        "wifi_subnet": "255.255.255.0",
+        "wifi_primaryDNS": "8.8.8.8",
+        "wifi_secondaryDNS": "8.8.4.4",
+        "ap_accessPoint": false,
+        "ap_nameap": "ESP3215286F24EC7C",
+        "ap_passwordap": "adminesp32",
+        "ap_canalap": 9,
+        "ap_hiddenap": 0,
+        "ap_connetap": 4
+    },
+    {
+        "Relay01_status": true,
+        "Relay02_status": false
+    },
+    {
+        "mqtt_user": "cuba_iot",
+        "mqtt_passw": "cuba_iot",
+        "mqtt_server": "cubaelectronica.com",
+        "mqtt_id": "9B1C5210CE0C3D",
+        "mqtt_time": 60000,
+        "mqtt_port": 1883,
+        "mqtt_enable": true
+    }
+]
