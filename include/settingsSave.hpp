@@ -103,7 +103,7 @@ boolean settingsSaveMQTT(){
     serializeJsonPretty(jsonConfig, file);
     file.close();
     log(F("Info: Configuración MQTT guardada"));
-    serializeJsonPretty(jsonConfig, Serial);
+    //serializeJsonPretty(jsonConfig, Serial);
     return true;
   }else{
     log(F("Error: Falló el guardado de la configuración del MQTT"));

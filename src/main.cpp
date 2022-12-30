@@ -25,7 +25,6 @@
 #include "settingsSave.hpp"
 #include "esp32_wifi.hpp"
 #include "esp32_mqtt.hpp"
-#include "esp32_api.hpp"
 #include "esp32_websocket.hpp"
 #include "esp32_server.hpp"
 
@@ -66,6 +65,7 @@ void setup() {
     if(!settingsReadMQTT()) settingsSaveMQTT();     // Salvar la configuracion del MQTT
     // leer www_username/password
     if(!settingsReadAdmin()) settingsSaveAdmin();   // Salvar el usuario y Contraseña
+    InitWebSockets ();                              //Inicializar el WebSocket.
     // Inicializar el Servidor
     InitServer();
     // Nos devuelve la lista de carpetas y archivos del SPIFFS ONLYDEBUG
@@ -96,11 +96,18 @@ void loop() {
         if(mqtt_server != 0){
             mqttLoop();
             if (mqttclient.connected()){
-                if (millis() - lastMsg > mqtt_time){
+                if ((millis() - lastMsg) > mqtt_time){
                     lastMsg = millis();
                     mqtt_publish();
                 }
             }      
         }
+    }
+    // -------------------------------------------------------------------
+    // Enviar JSON por WS 
+    // -------------------------------------------------------------------
+    if ((millis() - lastWsSend) > 1000) {
+        lastWsSend = millis();
+        WsMessage(GetJson(), "");
     }
 }

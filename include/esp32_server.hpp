@@ -77,7 +77,7 @@ void handleHome(AsyncWebServerRequest *request) {
         s.replace(F("#mqtt_on#"), mqttclient.connected() ? F("<span class='label btn-metis-2'>Online</span>") : F("<span class='label label-danger'>Offline</span>"));
         s.replace(F("#temp_cpu#"), String(TempCPUValue()));
         /* Bloque Progressbar */
-        s.replace(F("#flash_available#"), String(round(SPIFFS.usedBytes() * 100 / SPIFFS.totalBytes()), 0));
+        s.replace(F("#spiffs_used#"), String(round(SPIFFS.usedBytes() * 100 / SPIFFS.totalBytes()), 0));
         s.replace(F("#ram_available#"), String(ESP.getFreeHeap() * 100 / ESP.getHeapSize()));
         /* Botones Relays */
         s.replace(F("#relay1#"), Relay01_status ? "checked" : "");

@@ -26,11 +26,11 @@ String Json();
 // -------------------------------------------------------------------
 boolean mqtt_connect(){  
 
-  log ("mqtt_server: " + String (mqtt_server));
-  log ("mqtt_port: " + String (mqtt_port));
-  log ("mqtt_id: " + String (mqtt_id));
-  log ("mqtt_user: " + String (mqtt_user));
-  log ("mqtt_passw: " + String (mqtt_passw));
+  //log ("mqtt_server: " + String (mqtt_server));
+  //log ("mqtt_port: " + String (mqtt_port));
+  //log ("mqtt_id: " + String (mqtt_id));
+  //log ("mqtt_user: " + String (mqtt_user));
+  //log ("mqtt_passw: " + String (mqtt_passw));
   
   mqttclient.setServer(mqtt_server, mqtt_port);
   mqttclient.setCallback(callback);
@@ -71,33 +71,14 @@ void callback(char *topic, byte *payload, unsigned int length){
   }
 
   mensaje.trim();
+  OnOffRelays (mensaje);
 
   DynamicJsonDocument jsonDoc(300);
 
   deserializeJson(jsonDoc, mensaje);
 
-  if(jsonDoc["RELAY1"] == "on"){
-    setOnSingle(RELAY1);
-    Relay01_status = HIGH;
-    settingsSaveRelays();
-  }else if (jsonDoc["RELAY1"] == "off"){
-    setOffSingle(RELAY1);
-    Relay01_status = LOW;
-    settingsSaveRelays();
-  }else if(jsonDoc["RELAY2"] == "on"){
-    setOnSingle(RELAY2);
-    Relay02_status = HIGH;
-    settingsSaveRelays();
-  }else if (jsonDoc["RELAY2"] == "off"){
-    setOffSingle(RELAY2);
-    Relay02_status = LOW;
-    settingsSaveRelays();
-  }
-
   log("Info: Topico -->" + str_topic);
   log("Info: Mensaje -->" + mensaje); 
-
-  serializeJsonPretty(jsonDoc, Serial);
 
 }
 // -------------------------------------------------------------------
