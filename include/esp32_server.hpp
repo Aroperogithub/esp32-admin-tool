@@ -613,6 +613,59 @@ void InitServer(){
         }
     });
     // -------------------------------------------------------------------
+    // Escanear todas las redes WIFI al alcance de la señal
+    // url: /scan
+    // Metodo: GET
+    // Notas: La primera solicitud devolverá 0 resultados a menos que comience
+    // a escanear desde otro lugar (ciclo / configuración).
+    // No solicite más de 3-5 segundos. \ ALT + 92 
+    // -------------------------------------------------------------------
+    server.on ("/scan", HTTP_GET, [](AsyncWebServerRequest *request){
+    AsyncResponseStream *response;
+        if(false == requestPreProcess(request, response)) {         //Esto es para que solo pueda solicitar esta petición un usuario Logueado.
+            return;
+        }
+        String json = "";
+        int n = WiFi.scanComplete();
+        if (n == -2) {                                              //Se crea un archivo JSON vacío cuando no se encuentra ninguna red.
+            json = "{";
+            json += "\"meta\": { \"serial\": \""+ device_id +"\", \"count\": 0},";
+            json += "\"data\": [";
+            json += "],";   
+            json += "\"code\": 0 ";
+            json += "}";
+            WiFi.scanNetworks(true, true); 
+        } else if (n) {                                             //Esto es porque se han detectado redes, alguna hay.
+            json = "{";
+            json += "\"meta\": { \"serial\": \""+ device_id +"\", \"count\":"+String(n)+"},";
+            json += "\"data\": [";
+            for (int i = 0; i < n; ++i) {
+                if (i) json += ",";                                 //Esto es para poner una coma a partir de la primera red, para componer el fichero JSON en condiciones.
+                json += "{";
+                json += "\"n\":"+String(i+1);
+                json += ",\"rssi\":"+String(WiFi.RSSI(i));                              //NIVEL DE SEÑAL.
+                json += ",\"ssid\":\""+WiFi.SSID(i)+"\"";                               //NOMBRE DE LA RED.
+                json += ",\"bssid\":\""+WiFi.BSSIDstr(i)+"\"";                          //MAC.
+                json += ",\"channel\":"+String(WiFi.channel(i));                        //CANAL.
+                json += ",\"secure\":\""+ EncryptionType(WiFi.encryptionType(i))+"\"";  //NIVEL DE SEGURIDAD.
+                json += "}";                                        //Aquí se cierra el objeto.
+            }
+            json += "],";                                           //Aquí se cierra todo el JSON.
+            json += "\"code\": 1 ";
+            json += "}";
+            WiFi.scanDelete();                                      //Se manda a cerrar el proceso de Escaneo.
+            if(WiFi.scanComplete() == -2){
+                WiFi.scanNetworks(true, true);
+            }
+        }
+        response->addHeader ("Server","ESP32 Admin Tools");
+        request->send (200, "application/json", json);
+        json = String ();
+
+    });
+
+
+    // -------------------------------------------------------------------
     // Error 404 página no encontrada
     // url: "desconocido"
     // -------------------------------------------------------------------
